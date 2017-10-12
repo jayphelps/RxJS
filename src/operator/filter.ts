@@ -1,7 +1,5 @@
-import { Operator } from '../Operator';
-import { Subscriber } from '../Subscriber';
 import { Observable } from '../Observable';
-import { TeardownLogic } from '../Subscription';
+import { filter as higherOrderFilter } from '../operators/filter';
 
 /* tslint:disable:max-line-length */
 export function filter<T, S extends T>(this: Observable<T>, predicate: (value: T, index: number) => value is S): Observable<S>;
@@ -49,47 +47,7 @@ export function filter<T, This>(this: Observable<T>, predicate: (this: This, val
  * @method filter
  * @owner Observable
  */
-export function filter<T, This>(this: Observable<T>, predicate: (this: This, value: T, index: number) => boolean, thisArg?: This): Observable<T> {
-  return this.lift(new FilterOperator(predicate, thisArg));
-}
-
-class FilterOperator<T> implements Operator<T, T> {
-  constructor(private predicate: (value: T, index: number) => boolean, private thisArg?: any) {
-  }
-
-  call(subscriber: Subscriber<T>, source: any): TeardownLogic {
-    return source.subscribe(new FilterSubscriber(subscriber, this.predicate, this.thisArg));
-  }
-}
-
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-class FilterSubscriber<T> extends Subscriber<T> {
-
-  count: number = 0;
-
-  constructor(destination: Subscriber<T>,
-              private predicate: (value: T, index: number) => boolean,
-              private thisArg: any) {
-    super(destination);
-    this.predicate = predicate;
-  }
-
-  // the try catch block below is left specifically for
-  // optimization and perf reasons. a tryCatcher is not necessary here.
-  protected _next(value: T) {
-    let result: any;
-    try {
-      result = this.predicate.call(this.thisArg, value, this.count++);
-    } catch (err) {
-      this.destination.error(err);
-      return;
-    }
-    if (result) {
-      this.destination.next(value);
-    }
-  }
+export function filter<T>(this: Observable<T>, predicate: (value: T, index: number) => boolean,
+                          thisArg?: any): Observable<T> {
+  return higherOrderFilter(predicate, thisArg)(this);
 }

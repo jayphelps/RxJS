@@ -1,7 +1,5 @@
 import { Observable } from '../Observable';
-import { Operator } from '../Operator';
-import { Subscriber } from '../Subscriber';
-import { noop } from '../util/noop';
+import { ignoreElements as higherOrder } from '../operators/ignoreElements';
 
 /**
  * Ignores all items emitted by the source Observable and only passes calls of `complete` or `error`.
@@ -13,23 +11,6 @@ import { noop } from '../util/noop';
  * @method ignoreElements
  * @owner Observable
  */
-export function ignoreElements<T>(this: Observable<T>): Observable<never> {
-  return this.lift(new IgnoreElementsOperator());
-}
-
-class IgnoreElementsOperator<T> implements Operator<T, never> {
-  call(subscriber: Subscriber<never>, source: any): any {
-    return source.subscribe(new IgnoreElementsSubscriber(subscriber));
-  }
-}
-
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-class IgnoreElementsSubscriber<T> extends Subscriber<T> {
-  protected _next(unused: T): void {
-    noop();
-  }
+export function ignoreElements<T>(this: Observable<T>): Observable<T> {
+  return higherOrder()(this) as Observable<T>;
 }

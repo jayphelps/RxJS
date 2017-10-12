@@ -1,9 +1,9 @@
 declare const global: any;
 
-import * as Rx from '../../dist/cjs/Rx';
-import {ObservableInput} from '../../dist/cjs/Observable';
-import {root} from '../../dist/cjs/util/root';
-import {$$iterator} from '../../dist/cjs/symbol/iterator';
+import * as Rx from '../../dist/package/Rx';
+import { ObservableInput } from '../../dist/package/Observable';
+import { root } from '../../dist/package/util/root';
+import {$$iterator} from '../../dist/package/symbol/iterator';
 import $$symbolObservable from 'symbol-observable';
 
 export function lowerCaseO<T>(...args): Rx.Observable<T> {

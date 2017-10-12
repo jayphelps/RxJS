@@ -1,6 +1,5 @@
 import { Observable } from '../Observable';
-import { Operator } from '../Operator';
-import { Subscriber } from '../Subscriber';
+import { find as higherOrder } from '../operators/find';
 
 /* tslint:disable:max-line-length */
 export function find<T, S extends T>(this: Observable<T>, predicate: (value: T, index: number) => value is S): Observable<S>;
@@ -42,69 +41,7 @@ export function find<T, This>(this: Observable<T>, predicate: (this: This, value
  * @method find
  * @owner Observable
  */
-export function find<T, This>(this: Observable<T>, predicate: (this: This, value: T, index: number, source: Observable<T>) => boolean,
-                              thisArg?: This): Observable<T> {
-  if (typeof predicate !== 'function') {
-    throw new TypeError('predicate is not a function');
-  }
-  return <any>this.lift<any>(new FindValueOperator(predicate, this, false, thisArg));
-}
-
-export class FindValueOperator<T> implements Operator<T, T> {
-  constructor(private predicate: (value: T, index: number, source: Observable<T>) => boolean,
-              private source: Observable<T>,
-              private yieldIndex: boolean,
-              private thisArg?: any) {
-  }
-
-  call(observer: Subscriber<T>, source: any): any {
-    return source.subscribe(new FindValueSubscriber(observer, this.predicate, this.source, this.yieldIndex, this.thisArg));
-  }
-}
-
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-export class FindValueSubscriber<T> extends Subscriber<T> {
-  private index: number = 0;
-
-  constructor(destination: Subscriber<T>,
-              private predicate: (value: T, index: number, source: Observable<T>) => boolean,
-              private source: Observable<T>,
-              private yieldIndex: boolean,
-              private thisArg?: any) {
-    super(destination);
-  }
-
-  private notifyComplete(value: any): void {
-    const destination = this.destination;
-
-    destination.next(value);
-    destination.complete();
-    this.unsubscribe();
-  }
-
-  protected _next(value: T): void {
-    const { predicate, thisArg } = this;
-    const index = this.index++;
-    try {
-      const result = predicate.call(thisArg || this, value, index, this.source);
-      if (result) {
-        this.notifyComplete(this.yieldIndex ? index : value);
-      }
-    } catch (err) {
-      this.destination.error(err);
-      this.unsubscribe();
-    }
-  }
-
-  protected _complete(): void {
-    if (this.yieldIndex) {
-      this.notifyComplete(-1);
-    } else {
-      this.destination.complete();
-    }
-  }
+export function find<T>(this: Observable<T>, predicate: (value: T, index: number, source: Observable<T>) => boolean,
+                        thisArg?: any): Observable<T> {
+  return higherOrder(predicate, thisArg)(this);
 }

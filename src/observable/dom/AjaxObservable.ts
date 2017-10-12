@@ -4,8 +4,7 @@ import { errorObject } from '../../util/errorObject';
 import { Observable } from '../../Observable';
 import { Subscriber } from '../../Subscriber';
 import { TeardownLogic } from '../../Subscription';
-import { MapOperator } from '../../operator/map';
-import 'tslib';
+import { map } from '../../operators';
 
 export interface AjaxRequest {
   url?: string;
@@ -88,9 +87,17 @@ export function ajaxPatch(url: string, body?: any, headers?: Object): Observable
   return new AjaxObservable<AjaxResponse>({ method: 'PATCH', url, body, headers });
 }
 
+const mapResponse = map((x: AjaxResponse, index: number) => x.response);
+
 export function ajaxGetJSON<T>(url: string, headers?: Object): Observable<T> {
-  return new AjaxObservable<AjaxResponse>({ method: 'GET', url, responseType: 'json', headers })
-    .lift<T>(new MapOperator<AjaxResponse, T>((x: AjaxResponse, index: number): T => x.response, null));
+  return mapResponse(
+    new AjaxObservable<AjaxResponse>({
+      method: 'GET',
+      url,
+      responseType: 'json',
+      headers
+    })
+  );
 }
 
 /**
@@ -248,7 +255,7 @@ export class AjaxSubscriber<T> extends Subscriber<Event> {
       // timeout, responseType and withCredentials can be set once the XHR is open
       if (async) {
         xhr.timeout = request.timeout;
-        xhr.responseType = request.responseType;
+        xhr.responseType = request.responseType as any;
       }
 
       if ('withCredentials' in xhr) {
@@ -410,24 +417,7 @@ export class AjaxResponse {
   constructor(public originalEvent: Event, public xhr: XMLHttpRequest, public request: AjaxRequest) {
     this.status = xhr.status;
     this.responseType = xhr.responseType || request.responseType;
-
-    switch (this.responseType) {
-      case 'json':
-        if ('response' in xhr) {
-          //IE does not support json as responseType, parse it internally
-          this.response = xhr.responseType ? xhr.response : JSON.parse(xhr.response || xhr.responseText || 'null');
-        } else {
-          this.response = JSON.parse(xhr.responseText || 'null');
-        }
-        break;
-      case 'document':
-        this.response = xhr.responseXML;
-        break;
-      case 'text':
-      default:
-        this.response = ('response' in xhr) ? xhr.response : xhr.responseText;
-        break;
-    }
+    this.response = parseXhrResponse(this.responseType, xhr);
   }
 }
 
@@ -440,12 +430,37 @@ export class AjaxResponse {
  */
 export class AjaxError extends Error {
   status: number;
+  /** @type {string} The responseType (e.g. 'json', 'arraybuffer', or 'xml') */
+  responseType: string;
+
+  /** @type {string|ArrayBuffer|Document|object|any} The response data */
+  response: any;
 
   constructor(message: string, public xhr: XMLHttpRequest, public request: AjaxRequest) {
     super(message);
     this.name = 'AjaxError';
     this.status = xhr.status;
+    this.responseType = xhr.responseType || request.responseType;
+    this.response = parseXhrResponse(this.responseType, xhr);
+
     (<any>Object).setPrototypeOf(this, AjaxError.prototype);
+  }
+}
+
+function parseXhrResponse(responseType: string, xhr: XMLHttpRequest) {
+  switch (responseType) {
+    case 'json':
+        if ('response' in xhr) {
+          //IE does not support json as responseType, parse it internally
+          return xhr.responseType ? xhr.response : JSON.parse(xhr.response || xhr.responseText || 'null');
+        } else {
+          return JSON.parse(xhr.responseText || 'null');
+        }
+      case 'xml':
+        return xhr.responseXML;
+      case 'text':
+      default:
+        return  ('response' in xhr) ? xhr.response : xhr.responseText;
   }
 }
 

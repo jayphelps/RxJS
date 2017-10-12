@@ -1,6 +1,5 @@
-import { Operator } from '../Operator';
 import { Observable } from '../Observable';
-import { Subscriber } from '../Subscriber';
+import { defaultIfEmpty as higherOrder } from '../operators/defaultIfEmpty';
 
 /* tslint:disable:max-line-length */
 export function defaultIfEmpty<T, R = T>(this: Observable<T>, defaultValue?: R): Observable<R>;
@@ -36,41 +35,6 @@ export function defaultIfEmpty<T, R = T>(this: Observable<T>, defaultValue?: R):
  * @method defaultIfEmpty
  * @owner Observable
  */
-export function defaultIfEmpty<T, R = T>(this: Observable<T>, defaultValue: R = null): Observable<R> {
-  return this.lift(new DefaultIfEmptyOperator(defaultValue));
-}
-
-class DefaultIfEmptyOperator<T, R> implements Operator<T, R> {
-
-  constructor(private defaultValue: R) {
-  }
-
-  call(subscriber: Subscriber<R>, source: any): any {
-    return source.subscribe(new DefaultIfEmptySubscriber(subscriber, this.defaultValue));
-  }
-}
-
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-class DefaultIfEmptySubscriber<T, R> extends Subscriber<T> {
-  private isEmpty: boolean = true;
-
-  constructor(destination: Subscriber<R>, private defaultValue: R) {
-    super(destination);
-  }
-
-  protected _next(value: T): void {
-    this.isEmpty = false;
-    this.destination.next(value);
-  }
-
-  protected _complete(): void {
-    if (this.isEmpty) {
-      this.destination.next(this.defaultValue);
-    }
-    this.destination.complete();
-  }
+export function defaultIfEmpty<T, R>(this: Observable<T>, defaultValue: R = null): Observable<T | R> {
+  return higherOrder<T, R>(defaultValue)(this);
 }

@@ -1,12 +1,6 @@
-import { Operator } from '../Operator';
-import { Observable, ObservableInput } from '../Observable';
-import { Subscriber } from '../Subscriber';
-import { Subscription, TeardownLogic } from '../Subscription';
-import { OuterSubscriber } from '../OuterSubscriber';
-import { subscribeToResult } from '../util/subscribeToResult';
+import { Observable } from '../Observable';
+import { exhaust as higherOrder } from '../operators/exhaust';
 
-export function exhaust<T>(this: Observable<ObservableInput<T>>): Observable<T>;
-export function exhaust<T, R>(this: Observable<T>): Observable<R>;
 /**
  * Converts a higher-order Observable into a first-order Observable by dropping
  * inner Observables while the previous inner Observable has not yet completed.
@@ -42,48 +36,6 @@ export function exhaust<T, R>(this: Observable<T>): Observable<R>;
  * @method exhaust
  * @owner Observable
  */
-export function exhaust<T, R>(this: Observable<T>): Observable<R> {
-  return this.lift<R>(new SwitchFirstOperator<R>());
-}
-
-class SwitchFirstOperator<T> implements Operator<T, T> {
-  call(subscriber: Subscriber<T>, source: any): TeardownLogic {
-    return source.subscribe(new SwitchFirstSubscriber(subscriber));
-  }
-}
-
-/**
- * We need this JSDoc comment for affecting ESDoc.
- * @ignore
- * @extends {Ignored}
- */
-class SwitchFirstSubscriber<T> extends OuterSubscriber<T, T> {
-  private hasCompleted: boolean = false;
-  private hasSubscription: boolean = false;
-
-  constructor(destination: Subscriber<T>) {
-    super(destination);
-  }
-
-  protected _next(value: T): void {
-    if (!this.hasSubscription) {
-      this.hasSubscription = true;
-      this.add(subscribeToResult(this, value));
-    }
-  }
-
-  protected _complete(): void {
-    this.hasCompleted = true;
-    if (!this.hasSubscription) {
-      this.destination.complete();
-    }
-  }
-
-  notifyComplete(innerSub: Subscription): void {
-    this.remove(innerSub);
-    this.hasSubscription = false;
-    if (this.hasCompleted) {
-      this.destination.complete();
-    }
-  }
+export function exhaust<T>(this: Observable<T>): Observable<T> {
+  return higherOrder()(this) as Observable<T>;
 }

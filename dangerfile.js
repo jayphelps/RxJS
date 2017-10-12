@@ -70,14 +70,29 @@ if (!messageConventionValid) {
 }
 
 function getKB(size) {
-  return (size / 1024).toFixed(2);
+  return (size / 1024).toFixed(1);
+}
+
+function getFormattedKB(size) {
+  if (size < 0) {
+    return '-' + size.toString();
+  } else if (size > 0) {
+    return '+' + size.toString();
+  }
+  return size.toString();
 }
 
 var globalFile = 'Rx.js';
 var minFile = 'Rx.min.js';
 
 function sizeDiffBadge(name, value) {
-  return 'https://img.shields.io/badge/' + name + '-' + value + 'KB-red.svg?style=flat-square';
+  var color = 'lightgrey';
+  if (value > 0) {
+    color = 'red';
+  } else if (value < 0) {
+    color = 'green';
+  }
+  return 'https://img.shields.io/badge/' + name + '-' + getFormattedKB(getKB(value)) + 'KB-' + color + '.svg?style=flat-square';
 }
 
 //post size of build
@@ -107,11 +122,11 @@ schedule(new Promise(function (res) {
     var bundleMin = fs.statSync(bundleMinFile);
     var bundle_min_gzip = gzipSize.sync(fs.readFileSync(bundleMinFile, 'utf8'));
 
-    var sizeMessage = '<img src="https://img.shields.io/badge/Size%20Diff%20%28' + releaseVersion + '%29--lightgrey.svg?style=flat-square"/> ';
-    sizeMessage += '<img src="' + sizeDiffBadge('Global', getKB(global.size) - getKB(bundleGlobal.size)) + '"/>';
-    sizeMessage += '<img src="' + sizeDiffBadge('Global(gzipped)', getKB(global_gzip) - getKB(bundle_global_gzip)) + '"/>';
-    sizeMessage += '<img src="' + sizeDiffBadge('Min', getKB(min.size) - getKB(bundleMin.size)) + '"/>';
-    sizeMessage += '<img src="' + sizeDiffBadge('Min (gzipped)', getKB(min_gzip) - getKB(bundle_min_gzip)) + '"/>';
+    var sizeMessage = '<img src="https://img.shields.io/badge/Size%20Diff%20%28' + releaseVersion + '%29--lightgrey.svg?style=flat-square"/>  ';
+    sizeMessage += '<img src="' + sizeDiffBadge('Global', global.size - bundleGlobal.size) + '"/> ';
+    sizeMessage += '<img src="' + sizeDiffBadge('Global(gzip)', global_gzip - bundle_global_gzip) + '"/> ';
+    sizeMessage += '<img src="' + sizeDiffBadge('Min', min.size - bundleMin.size) + '"/> ';
+    sizeMessage += '<img src="' + sizeDiffBadge('Min (gzip)', min_gzip - bundle_min_gzip) + '"/> ';
     message(sizeMessage);
 
     markdown('> CJS: **' + getKB(result) +

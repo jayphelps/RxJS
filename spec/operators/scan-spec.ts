@@ -1,5 +1,5 @@
-import {expect} from 'chai';
-import * as Rx from '../../dist/cjs/Rx';
+import { expect } from 'chai';
+import * as Rx from '../../dist/package/Rx';
 import marbleTestingSignature = require('../helpers/marble-testing'); // tslint:disable-line:no-require-imports
 
 declare const { asDiagram, type };
@@ -228,19 +228,19 @@ describe('Observable.prototype.scan', () => {
     expectSubscriptions(e1.subscriptions).toBe(e1subs);
   });
 
-  it('should accept array typed reducers', () => {
+  it('should accept array types', () => {
     type(() => {
       let a: Rx.Observable<{ a: number; b: string }>;
-      a.reduce((acc, value) => acc.concat(value), []);
+      a.scan((acc, value) => acc.concat(value), []);
     });
   });
 
-  it('should accept T typed reducers', () => {
+  it('should accept T types', () => {
     type(() => {
       let a: Rx.Observable<{ a?: number; b?: string }>;
-      a.reduce((acc, value) => {
-        value.a = acc.a;
-        value.b = acc.b;
+      a.scan((acc, value) => {
+        acc.a = value.a;
+        acc.b = value.b;
         return acc;
       }, {});
     });
@@ -249,9 +249,9 @@ describe('Observable.prototype.scan', () => {
   it('should accept R typed reducers', () => {
     type(() => {
       let a: Rx.Observable<{ a: number; b: string }>;
-      a.reduce<{ a?: number; b?: string }>((acc, value) => {
-        value.a = acc.a;
-        value.b = acc.b;
+      a.scan<{ a?: number; b?: string }>((acc, value) => {
+        acc.a = value.a;
+        acc.b = value.b;
         return acc;
       }, {});
     });
