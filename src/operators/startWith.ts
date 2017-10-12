@@ -46,7 +46,7 @@ export function startWith<T>(...array: Array<T | IScheduler>): MonoTypeOperatorF
     } else if (len > 1) {
       return concatStatic(new ArrayObservable<T>(<T[]>array, scheduler), source);
     } else {
-      return concatStatic(new EmptyObservable<T>(scheduler), source);
+      return concatStatic(new EmptyObservable(scheduler), source);
     }
   };
 }

@@ -42,7 +42,7 @@ import { MonoTypeOperatorFunction } from '../interfaces';
 export function take<T>(count: number): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
     if (count === 0) {
-      return new EmptyObservable<T>();
+      return new EmptyObservable();
     } else {
       return source.lift(new TakeOperator(count));
     }

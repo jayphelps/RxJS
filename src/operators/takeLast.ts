@@ -45,7 +45,7 @@ import { MonoTypeOperatorFunction } from '../interfaces';
 export function takeLast<T>(count: number): MonoTypeOperatorFunction<T> {
   return function takeLastOperatorFunction(source: Observable<T>): Observable<T> {
     if (count === 0) {
-      return new EmptyObservable<T>();
+      return new EmptyObservable();
     } else {
       return source.lift(new TakeLastOperator(count));
     }

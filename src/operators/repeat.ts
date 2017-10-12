@@ -20,7 +20,7 @@ import { MonoTypeOperatorFunction } from '../interfaces';
 export function repeat<T>(count: number = -1): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
     if (count === 0) {
-      return new EmptyObservable<T>();
+      return new EmptyObservable();
     } else if (count < 0) {
       return source.lift(new RepeatOperator(-1, source));
     } else {

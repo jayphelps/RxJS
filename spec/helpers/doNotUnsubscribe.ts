@@ -1,4 +1,4 @@
-import * as Rx from '../../dist/cjs/Rx';
+import * as Rx from '../../dist/package/Rx';
 
 export function doNotUnsubscribe<T>(ob: Rx.Observable<T>): Rx.Observable<T> {
   return ob.lift(new DoNotUnsubscribeOperator());
