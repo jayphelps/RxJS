@@ -36,15 +36,15 @@ import { MonoTypeOperatorFunction } from '../interfaces';
  * @see {@link sampleTime}
  * @see {@link throttleTime}
  *
- * @param {number} duration Time to wait before emitting the most recent source
+ * @param duration Time to wait before emitting the most recent source
  * value, measured in milliseconds or the time unit determined internally
  * by the optional `scheduler`.
- * @param {Scheduler} [scheduler=async] The {@link IScheduler} to use for
+ * @param [scheduler=async] The {@link IScheduler} to use for
  * managing the timers that handle the rate-limiting behavior.
- * @return {Observable<T>} An Observable that performs rate-limiting of
+ * @return An Observable that performs rate-limiting of
  * emissions from the source Observable.
- * @method auditTime
  * @owner Observable
+ * @category operators
  */
 export function auditTime<T>(duration: number, scheduler: IScheduler = async): MonoTypeOperatorFunction<T> {
   return audit(() => timer(duration, scheduler));
