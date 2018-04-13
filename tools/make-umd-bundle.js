@@ -3,6 +3,7 @@ var _ = require('lodash');
 var rollup = require('rollup');
 var rollupInject = require('rollup-plugin-inject');
 var rollupNodeResolve = require('rollup-plugin-node-resolve');
+var rollupCommonJs = require('rollup-plugin-commonjs');
 
 var fs = require('fs');
 var path = require('path');
@@ -21,6 +22,9 @@ rollup.rollup({
         return ['tslib', key];
       }),
     }),
+    // This is needed because the jison Parser.js file is a generated CJS file
+    // and otherwise would not get included correctly in the UMD build
+    rollupCommonJs()
   ],
 }).then(function (bundle) {
   var result = bundle.generate({

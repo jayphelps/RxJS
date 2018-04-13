@@ -2,6 +2,17 @@ import { Action } from './scheduler/Action';
 import { Subscription } from './Subscription';
 import { SchedulerLike, SchedulerAction } from './types';
 
+export enum SchedulerKind {
+  ASYNC = 'ASYNC',
+  ASAP = 'ASAP',
+  QUEUE = 'QUEUE',
+  VIRTUAL = 'VIRTUAL',
+  TEST = 'TEST',
+  NEW = 'NEW',
+  ANIMATION_FRAME = 'ANIMATION_FRAME',
+  UNKNOWN = 'UNKNOWN'
+}
+
 /**
  * An execution context and a data structure to order tasks and schedule their
  * execution. Provides a notion of (potentially virtual) time, through the
@@ -22,13 +33,16 @@ import { SchedulerLike, SchedulerAction } from './types';
  * {@link SchedulerLike}
  */
 export class Scheduler implements SchedulerLike {
+  public static delegate?: Scheduler;
 
   /** @nocollapse */
   public static now: () => number = Date.now ? Date.now : () => +new Date();
+  public kind = SchedulerKind.UNKNOWN;
+  private _now: () => number;
 
-  constructor(private SchedulerAction: typeof Action,
-              now: () => number = Scheduler.now) {
-    this.now = now;
+  constructor(protected SchedulerAction: typeof Action,
+    now: () => number = Scheduler.now) {
+    this._now = now;
   }
 
   /**
@@ -39,7 +53,18 @@ export class Scheduler implements SchedulerLike {
    * have a relation to wall-clock time. May or may not refer to a time unit
    * (e.g. milliseconds).
    */
-  public now: () => number;
+  public now(): number {
+    if (Scheduler.delegate) {
+      return Scheduler.delegate.now();
+    } else {
+      return this._now();
+    }
+  }
+
+
+  protected _schedule<T>(originalScheduler: Scheduler, work: (this: SchedulerAction<T>, state?: T) => void, delay: number = 0, state?: T): Subscription {
+    return new this.SchedulerAction<T>(this, work).schedule(state, delay);
+  }
 
   /**
    * Schedules a function, `work`, for execution. May happen at some point in
@@ -59,6 +84,10 @@ export class Scheduler implements SchedulerLike {
    * the scheduled work.
    */
   public schedule<T>(work: (this: SchedulerAction<T>, state?: T) => void, delay: number = 0, state?: T): Subscription {
-    return new this.SchedulerAction<T>(this, work).schedule(state, delay);
+    if (Scheduler.delegate) {
+      return Scheduler.delegate._schedule(this, work, delay, state);
+    } else {
+      return this._schedule(this, work, delay, state);
+    }
   }
 }
