@@ -1,7 +1,9 @@
-import { Scheduler } from '../Scheduler';
+import { Scheduler, SchedulerKind } from '../Scheduler';
 import { AsyncAction } from './AsyncAction';
 
 export class AsyncScheduler extends Scheduler {
+  public kind = SchedulerKind.ASYNC;
+
   public actions: Array<AsyncAction<any>> = [];
   /**
    * A flag to indicate whether the Scheduler is currently executing a batch of

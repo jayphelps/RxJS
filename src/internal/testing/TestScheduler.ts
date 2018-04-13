@@ -6,6 +6,7 @@ import { TestMessage } from './TestMessage';
 import { SubscriptionLog } from './SubscriptionLog';
 import { Subscription } from '../Subscription';
 import { VirtualTimeScheduler, VirtualAction } from '../scheduler/VirtualTimeScheduler';
+import { SchedulerKind } from '../Scheduler';
 
 const defaultMaxFrame: number = 750;
 
@@ -19,6 +20,7 @@ export type observableToBeFn = (marbles: string, values?: any, errorValue?: any)
 export type subscriptionLogsToBeFn = (marbles: string | string[]) => void;
 
 export class TestScheduler extends VirtualTimeScheduler {
+  public kind = SchedulerKind.TEST;
   public readonly hotObservables: HotObservable<any>[] = [];
   public readonly coldObservables: ColdObservable<any>[] = [];
   private flushTests: FlushableTest[] = [];

@@ -1,7 +1,10 @@
 import { AsyncAction } from './AsyncAction';
 import { AsyncScheduler } from './AsyncScheduler';
+import { SchedulerKind } from '../Scheduler';
 
 export class AsapScheduler extends AsyncScheduler {
+  public kind = SchedulerKind.ASAP;
+
   public flush(action?: AsyncAction<any>): void {
 
     this.active = true;

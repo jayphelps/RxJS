@@ -2,15 +2,17 @@ import { AsyncAction } from './AsyncAction';
 import { Subscription } from '../Subscription';
 import { AsyncScheduler } from './AsyncScheduler';
 import { SchedulerAction } from '../types';
+import { SchedulerKind, Scheduler } from '../Scheduler';
 
 export class VirtualTimeScheduler extends AsyncScheduler {
+  public kind = SchedulerKind.VIRTUAL;
 
   protected static frameTimeFactor: number = 10;
 
   public frame: number = 0;
   public index: number = -1;
 
-  constructor(SchedulerAction: typeof AsyncAction = VirtualAction as any,
+  constructor(SchedulerAction: typeof AsyncAction = VirtualAction,
               public maxFrames: number = Number.POSITIVE_INFINITY) {
     super(SchedulerAction, () => this.frame);
   }
@@ -38,6 +40,11 @@ export class VirtualTimeScheduler extends AsyncScheduler {
       throw error;
     }
   }
+
+  protected _schedule<T>(originalScheduler: Scheduler, work: (this: SchedulerAction<T>, state?: T) => void, delay: number = 0, state?: T): Subscription {
+    const Action = this.SchedulerAction as typeof VirtualAction;
+    return new Action<T>(this, work, undefined, originalScheduler).schedule(state, delay);
+  }
 }
 
 /**
@@ -51,7 +58,8 @@ export class VirtualAction<T> extends AsyncAction<T> {
 
   constructor(protected scheduler: VirtualTimeScheduler,
               protected work: (this: SchedulerAction<T>, state?: T) => void,
-              protected index: number = scheduler.index += 1) {
+              protected index: number = scheduler.index += 1,
+              protected originalScheduler: Scheduler = scheduler) {
     super(scheduler, work);
     this.index = scheduler.index = index;
   }

@@ -1,0 +1,6 @@
+{
+  "name": "rxjs/internal/testing/parser",
+  "typings": "./Parser.d.ts",
+  "main": "./Parser.js",
+  "sideEffects": false
+}
