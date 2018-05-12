@@ -7,6 +7,8 @@ We can test our _asynchronous_ RxJS code _synchronously_ and deterministically b
 > At this time the TestScheduler can only be used to test code that uses timers, like delay/debounceTime/etc (i.e. it uses AsyncScheduler with delays > 1). If the code consumes a Promise or does scheduling with AsapScheduler/AnimationFrameScheduler/etc it cannot be reliably tested with TestScheduler, but instead should be tested more traditionally. See the [Known Issues](#known-issues) section for more details.
 
 ```ts
+import { TestScheduler } from 'rxjs/testing';
+
 const testScheduler = new TestScheduler((actual, expected) => {
   // some how assert the two objects are equal
   // e.g. with chai `expect(actual).deep.equal(expected)`
@@ -18,18 +20,48 @@ testScheduler.run(({ cold }) => {
   const output = input.pipe(
     debounceTime(5)
   );
-  const expected = '   ----------c---|';
+  const expected = '  ----------c---|';
   expectObservable(output).toBe(expected);
 });
 ```
 
 ## API
 
+We can import the TestScheduler from the `'rxjs/testing'` namespace:
+
+```ts
+import { TestScheduler } from 'rxjs/testing';
+```
+
+To use the TestScheduler we must first create an instance of it, passing in a function that should test the equality of two provided arguments: the `actual` and `expected` marbles. You should assert that the two objects are **deep equal** using the appropriate assertion utility from your testing library of choice. e.g. using [Chai](http://www.chaijs.com/) it would be `expect(actual).deep.equal(expected)`
+
+```ts
+import { TestScheduler } from 'rxjs/testing';
+
+const testScheduler = new TestScheduler((actual, expected) => {
+  // some how assert the two objects are equal
+  // e.g. with chai `expect(actual).deep.equal(expected)`
+});
+```
+
+The actual/expected arguments will be arrays of objects that are a serialization of actual/expected marble diagrams asserted from a `expectObservable()` or `expectSubscription()` call.
+
+
+
+
+
 The callback you provide to `testScheduler.run(callback)` is called with an object that contains the helper functions you'll use to write your tests.
 
 > When the code inside this callback is being executed, any operator that uses timers/AsyncScheduler (like delay, debounceTime, etc) will **automaticaly** use the TestScheduler instead, so that we have "virtual time". You do not need to pass the TestScheduler to them, like in the past.
 
 ```ts
+import { TestScheduler } from 'rxjs/testing';
+
+const testScheduler = new TestScheduler((actual, expected) => {
+  // some how assert the two objects are equal
+  // e.g. with chai `expect(actual).deep.equal(expected)`
+});
+
 testScheduler.run(helpers => {
   const { cold, hot, expectObservable, expectSubscriptions, flush } = helpers;
   // use them
